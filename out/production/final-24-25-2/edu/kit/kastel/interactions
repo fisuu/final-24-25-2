@@ -1,0 +1,13 @@
+load database C:\Users\fion\IdeaProjects\programming2425final02-uwing\src\edu\kit\kastel\config
+export
+add calc (id=202) contained-in operatingsystem
+remove writer (id=201) part-of LibreOffice (id=200)
+remove writer (id=201) contained-in officesuite
+nodes
+edges
+recommend S1 105
+recommend S3 107
+recommend UNION(S1 105,S3 107)
+recommend S1 202
+recommend INTERSECTION(S1 202,UNION(S1 105,S3 107))
+quit

@@ -1,0 +1,10 @@
+cables contains Power (id=0)
+cables contains networking
+cat4 (id=14) contained-in networking
+cat5e (id=15) contained-in networking
+cat4 (id=14) predecessor-of cat5e (id=15)
+display contained-in cables
+vga (id=21) contained-in display
+dvi (id=22) contained-in display
+display contains hdmi (id=23)
+display contains dp (id=24)
