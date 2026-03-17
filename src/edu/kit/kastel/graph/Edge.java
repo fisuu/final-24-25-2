@@ -1,7 +1,8 @@
-package edu.kit.kastel;
+package edu.kit.kastel.graph;
 
 /**
- * The type Edge.
+ * The type edge.
+ * Represents an edge in the graph.
  *
  * @author uwing
  */
@@ -11,10 +12,10 @@ public class Edge {
     private final Relation weight;
 
     /**
-     * Instantiates a new Edge.
+     * Instantiates a new edge.
      *
-     * @param neighbor the neighbor
-     * @param weight   the weight
+     * @param neighbor the neighbor item that is connected by the edge
+     * @param weight   the relation between the two items
      */
     public Edge(Item neighbor, Relation weight) {
         this.neighbor = neighbor;
@@ -22,18 +23,18 @@ public class Edge {
     }
 
     /**
-     * Gets neighbor.
+     * Gets the neighbor.
      *
-     * @return the neighbor
+     * @return the neighbor item
      */
     public Item getNeighbor() {
         return neighbor;
     }
 
     /**
-     * Gets weight.
+     * Gets the weight.
      *
-     * @return the weight
+     * @return the relation between the two items
      */
     public Relation getWeight() {
         return weight;

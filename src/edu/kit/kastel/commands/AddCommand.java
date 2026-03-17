@@ -1,8 +1,13 @@
 package edu.kit.kastel.commands;
 
-import edu.kit.kastel.InvalidConfigException;
-import edu.kit.kastel.ReadFile;
-import edu.kit.kastel.RecommendationSystem;
+import edu.kit.kastel.util.InvalidConfigurationException;
+import edu.kit.kastel.util.EdgeParameters;
+import edu.kit.kastel.util.FileReader;
+import edu.kit.kastel.util.RecommendationSystem;
+
+
+import static edu.kit.kastel.util.EdgeParameters.getEdgeParameters;
+
 
 /**
  * The type add command.
@@ -11,6 +16,11 @@ import edu.kit.kastel.RecommendationSystem;
  * @author uwing
  */
 public class AddCommand extends Command {
+
+    /**
+     * The constant MIN_ARGUMENTS_LENGTH is the minimum length of the arguments array.
+     */
+    public static final int MIN_ARGUMENTS_LENGTH = 4;
 
     private static final String COMMAND_NAME = "add";
     private static final String RELATION_EXISTS_MESSAGE = "relation already exists";
@@ -29,28 +39,30 @@ public class AddCommand extends Command {
     }
 
     @Override
-    public void execute(String[] args) throws InvalidCommandArgumentException {
+    public String execute(String[] args) throws InvalidCommandArgumentException {
 
-        if (args.length < 4) {
+        if (args.length < MIN_ARGUMENTS_LENGTH) {
             throw new InvalidCommandArgumentException(INVALID_SYNTAX.formatted(COMMAND_NAME));
         }
 
-        EdgeValues edgeValues = getEdgeParameters(args, recommendationSystem);
+        EdgeParameters edgeParameter = getEdgeParameters(args, recommendationSystem);
 
-        if (existingEdge(edgeValues.source(), edgeValues.neighbour(), edgeValues.relation(), recommendationSystem)) {
+        if (existingEdge(edgeParameter.source(), edgeParameter.neighbour(), edgeParameter.relation(), recommendationSystem)) {
             throw new InvalidCommandArgumentException(RELATION_EXISTS_MESSAGE);
         }
 
-        if (!edgeValues.relation().validRelation(edgeValues.source(), edgeValues.neighbour())) {
-            throw new InvalidCommandArgumentException(ReadFile.INVALID_RELATION_MESSAGE);
+        if (!edgeParameter.relation().validRelation(edgeParameter.source(), edgeParameter.neighbour())) {
+            throw new InvalidCommandArgumentException(FileReader.INVALID_RELATION_MESSAGE);
         }
 
         try {
-            ReadFile.uniqueObject(recommendationSystem.getGraph().getItemGraph().keySet(), edgeValues.source());
-        } catch (InvalidConfigException e) {
+            FileReader.uniqueItems(recommendationSystem.getGraph().getDirectedGraph().keySet(), edgeParameter.source());
+        } catch (InvalidConfigurationException e) {
             throw new InvalidCommandArgumentException(NODE_NAME_OR_ID_EXISTS.formatted(e.getMessage()));
         }
 
-        recommendationSystem.getGraph().addEdge(edgeValues.source(), edgeValues.neighbour(), edgeValues.relation());
+        recommendationSystem.getGraph().addToGraph(edgeParameter.source(), edgeParameter.neighbour(), edgeParameter.relation());
+
+        return "";
     }
 }

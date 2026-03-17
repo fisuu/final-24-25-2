@@ -1,9 +1,11 @@
 package edu.kit.kastel.commands;
 
-import edu.kit.kastel.CleanUpArguments;
-import edu.kit.kastel.Item;
-import edu.kit.kastel.RecommendationSystem;
-import edu.kit.kastel.RecursiveDescentParser;
+import edu.kit.kastel.graph.Item;
+import edu.kit.kastel.util.RecommendationSystem;
+import edu.kit.kastel.util.InvalidParsingException;
+import edu.kit.kastel.util.FileReader;
+import edu.kit.kastel.util.RecursiveDescentParser;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -14,9 +16,13 @@ import java.util.List;
  */
 public class RecommendCommand extends Command {
 
-    private static final String COMMAND_NAME = "recommend";
-
-    private static final String PRODUCT_PATTERN = "%s:%d";
+    protected static final String COMMAND_NAME = "recommend";
+    /**
+     * The constant TERM_PATTERN is used to split the input into tokens.
+     * While brackets and commas are split into separate tokens.
+     */
+    private static final String TERM_PATTERN = "(?=[(),])|(?<=[(),])|\\\\b(UNION|INTERSECTION)\\\\b";
+    private static final String PRODUCT_OUTPUT_PATTERN = "%s:%d";
 
     private final RecommendationSystem recommendationSystem;
 
@@ -30,32 +36,32 @@ public class RecommendCommand extends Command {
         this.recommendationSystem = recommendationSystem;
     }
 
-    /**
-     * Executes the command.
-     *
-     * @param args the arguments
-     * @throws InvalidCommandArgumentException the invalid command argument exception
-     */
     @Override
-    public void execute(String[] args) throws InvalidCommandArgumentException {
+    public String execute(String[] args) throws InvalidCommandArgumentException {
 
+        // Since it's easier to apply a regex to the whole string, we concatenate the arguments
         StringBuilder input = new StringBuilder();
         for (int i = 1; i < args.length; i++) {
             input.append(args[i]).append(SEPARATOR);
         }
-        List<String> line = CleanUpArguments.cleanTerm(input.toString());
+        List<String> line = new ArrayList<>(List.of(FileReader.cleanWhitespace(input.toString()).split(TERM_PATTERN)));
 
         RecursiveDescentParser parser = new RecursiveDescentParser(line, recommendationSystem);
 
-        List<Item> recommendedProducts = sortList(parser.start());
+        List<Item> recommendedProducts;
+        try {
+            recommendedProducts = sortList(parser.start());
+        } catch (InvalidParsingException e) {
+            throw new InvalidCommandArgumentException(e.getMessage());
+        }
         StringBuilder output = new StringBuilder();
         for (Item product : recommendedProducts) {
-            output.append(String.format(PRODUCT_PATTERN + SEPARATOR, product.getName(), product.getId()));
+            output.append(String.format(PRODUCT_OUTPUT_PATTERN + SEPARATOR, product.getName(), product.getId()));
         }
         if (!output.isEmpty()) {
-            output.deleteCharAt(output.length() - 1);
+            output.deleteCharAt(output.length() - FileReader.INDEX_OFFSET);
         }
-        System.out.println(output);
+        return output.toString();
     }
 
 }

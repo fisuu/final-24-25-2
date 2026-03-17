@@ -1,5 +1,7 @@
 package edu.kit.kastel.commands;
 
+import edu.kit.kastel.util.RecommendationSystem;
+
 /**
  * The type quit command.
  * The quit command is responsible for quitting the program.
@@ -8,30 +10,32 @@ package edu.kit.kastel.commands;
  */
 public class QuitCommand extends Command {
 
-    /**
-     * The constant COMMAND_NAME is the name of the command.
-     */
-    public static final String COMMAND_NAME = "quit";
+    protected static final String COMMAND_NAME = "quit";
 
     private static final int ARG_LENGTH = 1;
 
     private final CommandHandler commandHandler;
+    private final RecommendationSystem recommendationSystem;
 
     /**
      * Instantiates a new quit command.
      *
      * @param commandHandler       the command handler
+     * @param recommendationSystem the recommendation system
      */
-    public QuitCommand(CommandHandler commandHandler) {
+    public QuitCommand(CommandHandler commandHandler, RecommendationSystem recommendationSystem) {
         super(COMMAND_NAME);
         this.commandHandler = commandHandler;
+        this.recommendationSystem = recommendationSystem;
     }
 
     @Override
-    public void execute(String[] args) throws InvalidCommandArgumentException {
+    public String execute(String[] args) throws InvalidCommandArgumentException {
 
-        invalidArgumentLength(args, ARG_LENGTH);
+        validateArgumentLength(args, ARG_LENGTH);
 
+        recommendationSystem.closeScanner();
         commandHandler.quit();
+        return "";
     }
 }

@@ -1,5 +1,6 @@
-package edu.kit.kastel;
+package edu.kit.kastel.util;
 
+import edu.kit.kastel.graph.Graph;
 import java.util.Scanner;
 
 /**
@@ -13,7 +14,8 @@ public class RecommendationSystem {
     private final Scanner scanner;
 
     /**
-     * Instantiates a new Recommendation system.
+     * Instantiates a new recommendation system.
+     * This class is used in almost all classes to access the graph.
      */
     public RecommendationSystem() {
         this.graph = new Graph();
@@ -36,5 +38,12 @@ public class RecommendationSystem {
      */
     public Scanner getScanner() {
         return scanner;
+    }
+
+    /**
+     * Close scanner.
+     */
+    public void closeScanner() {
+        scanner.close();
     }
 }

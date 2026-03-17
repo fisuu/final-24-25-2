@@ -1,10 +1,11 @@
 package edu.kit.kastel.commands;
 
-import edu.kit.kastel.Edge;
-import edu.kit.kastel.Item;
-import edu.kit.kastel.RecommendationSystem;
+import edu.kit.kastel.graph.Edge;
+import edu.kit.kastel.graph.Item;
+import edu.kit.kastel.graph.ItemType;
+import edu.kit.kastel.util.RecommendationSystem;
 import java.util.List;
-import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * The type export command.
@@ -36,12 +37,12 @@ public class ExportCommand extends Command {
     }
 
     @Override
-    public void execute(String[] args) throws InvalidCommandArgumentException {
+    public String execute(String[] args) throws InvalidCommandArgumentException {
 
-        invalidArgumentLength(args, ARG_LENGTH);
+        validateArgumentLength(args, ARG_LENGTH);
 
         StringBuilder graph = new StringBuilder();
-        for (Map.Entry<Item, List<Edge>> entry : recommendationSystem.getGraph().getItemGraph().entrySet()) {
+        for (Entry<Item, List<Edge>> entry : recommendationSystem.getGraph().getDirectedGraph().entrySet()) {
             Item node = entry.getKey();
             for (Edge edge : entry.getValue()) {
                 String relation = edge.getWeight().getName().replace(RELATION_CONCATENATION, CONCATENATION_REPLACEMENT);
@@ -49,13 +50,12 @@ public class ExportCommand extends Command {
             }
         }
 
-        for (Map.Entry<Item, List<Edge>> entry : recommendationSystem.getGraph().getItemGraph().entrySet()) {
+        for (Entry<Item, List<Edge>> entry : recommendationSystem.getGraph().getDirectedGraph().entrySet()) {
             Item node = entry.getKey();
-            if (node.getId() == -1) {
+            if (node.getType().equals(ItemType.CATEGORY)) {
                 graph.append(String.format(PRINTED_NODE + LINE_SEPARATOR, node.getName()));
             }
         }
-
-        System.out.printf(PRINTED_GRAPH + LINE_SEPARATOR, LINE_SEPARATOR, graph);
+        return PRINTED_GRAPH.formatted(LINE_SEPARATOR, graph);
     }
 }

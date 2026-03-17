@@ -1,7 +1,8 @@
 package edu.kit.kastel.commands;
 
-import edu.kit.kastel.Item;
-import edu.kit.kastel.RecommendationSystem;
+import edu.kit.kastel.graph.Item;
+import edu.kit.kastel.graph.ItemType;
+import edu.kit.kastel.util.RecommendationSystem;
 
 /**
  * The type nodes command.
@@ -13,6 +14,7 @@ public class NodesCommand extends Command {
 
     private static final String COMMAND_NAME = "nodes";
     private static final String PRODUCT_SYNTAX = "%s:%d";
+    private static final int ARG_LENGTH = 1;
 
     private final RecommendationSystem recommendationSystem;
 
@@ -26,26 +28,20 @@ public class NodesCommand extends Command {
         this.recommendationSystem = recommendationSystem;
     }
 
-    /**
-     * Executes the command.
-     *
-     * @param args the args
-     * @throws InvalidCommandArgumentException the invalid command argument exception
-     */
     @Override
-    public void execute(String[] args) throws InvalidCommandArgumentException {
+    public String execute(String[] args) throws InvalidCommandArgumentException {
 
-        invalidArgumentLength(args, 1);
+        validateArgumentLength(args, ARG_LENGTH);
 
-        StringBuilder sb = new StringBuilder();
-        for (Item node : recommendationSystem.getGraph().getItemGraph().keySet()) {
-            if (node.getId() != -1) {
-                sb.append(String.format(PRODUCT_SYNTAX, node.getName(), node.getId())).append(SEPARATOR);
-            } else if (node.getId() == -1) {
-                sb.append(String.format(node.getName())).append(SEPARATOR);
+        StringBuilder stringBuilder = new StringBuilder();
+        for (Item node : recommendationSystem.getGraph().getDirectedGraph().keySet()) {
+            if (node.getType().equals(ItemType.PRODUCT)) {
+                stringBuilder.append(PRODUCT_SYNTAX.formatted(node.getName(), node.getId())).append(SEPARATOR);
+            } else if (node.getType().equals(ItemType.CATEGORY)) {
+                stringBuilder.append(String.format(node.getName())).append(SEPARATOR);
             }
         }
-        sb.deleteCharAt(sb.length() - 1);
-        System.out.println(sb);
+        stringBuilder.deleteCharAt(stringBuilder.length() - ARG_LENGTH);
+        return stringBuilder.toString();
     }
 }

@@ -1,10 +1,14 @@
 package edu.kit.kastel.commands;
 
-import edu.kit.kastel.RecommendationSystem;
+import edu.kit.kastel.util.RecommendationSystem;
+import edu.kit.kastel.util.EdgeParameters;
+
+
+import static edu.kit.kastel.util.EdgeParameters.getEdgeParameters;
 
 /**
  * The type remove command.
- * this command is used to remove a relation between two nodes.
+ * This command is used to remove a relation(edge) between two nodes.
  * If a node has no more relations, it will be removed from the graph.
  *
  * @author uwing
@@ -27,18 +31,19 @@ public class RemoveCommand extends Command {
     }
 
     @Override
-    public void execute(String[] args) throws InvalidCommandArgumentException {
+    public String execute(String[] args) throws InvalidCommandArgumentException {
 
-        if (args.length < 4) {
+        if (args.length < AddCommand.MIN_ARGUMENTS_LENGTH) {
             throw new InvalidCommandArgumentException(INVALID_SYNTAX.formatted(COMMAND_NAME));
         }
 
-        EdgeValues edgeValues = getEdgeParameters(args, recommendationSystem);
+        EdgeParameters edgeParameter = getEdgeParameters(args, recommendationSystem);
 
-        if (!existingEdge(edgeValues.source(), edgeValues.neighbour(), edgeValues.relation(), recommendationSystem)) {
+        if (!existingEdge(edgeParameter.source(), edgeParameter.neighbour(), edgeParameter.relation(), recommendationSystem)) {
             throw new InvalidCommandArgumentException(NOT_EXISTING_RELATION_MESSAGE);
         }
 
-        recommendationSystem.getGraph().removeEdge(edgeValues.source(), edgeValues.neighbour(), edgeValues.relation());
+        recommendationSystem.getGraph().removeEdge(edgeParameter.source(), edgeParameter.neighbour(), edgeParameter.relation());
+        return "";
     }
 }

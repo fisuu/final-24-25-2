@@ -1,10 +1,10 @@
 package edu.kit.kastel.commands;
 
-import edu.kit.kastel.Edge;
-import edu.kit.kastel.Item;
-import edu.kit.kastel.InvalidConfigException;
-import edu.kit.kastel.ReadFile;
-import edu.kit.kastel.RecommendationSystem;
+import edu.kit.kastel.graph.Edge;
+import edu.kit.kastel.graph.Item;
+import edu.kit.kastel.util.InvalidConfigurationException;
+import edu.kit.kastel.util.FileReader;
+import edu.kit.kastel.util.RecommendationSystem;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,9 +18,7 @@ import java.util.Map;
 public class LoadDatabaseCommand extends Command {
 
     private static final String COMMAND_NAME = "load database";
-    private static final String INVALID_CONFIG = "invalid configuration: %s";
     private static final int PATH_ARGUMENT_INDEX = 2;
-    private static final int ARG_LENGTH = 3;
 
     private final RecommendationSystem recommendationSystem;
 
@@ -35,18 +33,19 @@ public class LoadDatabaseCommand extends Command {
     }
 
     @Override
-    public void execute(String[] args) throws InvalidCommandArgumentException {
+    public String execute(String[] args) throws InvalidCommandArgumentException {
 
-        invalidArgumentLength(args, ARG_LENGTH);
+        Map<Item, List<Edge>> oldGraph = new HashMap<>(recommendationSystem.getGraph().getDirectedGraph());
 
-        Map<Item, List<Edge>> oldGraph = new HashMap<>(recommendationSystem.getGraph().getItemGraph());
+        recommendationSystem.getGraph().resetGraph();
 
         try {
-            recommendationSystem.getGraph().resetGraph();
-            ReadFile.loadFile(args[PATH_ARGUMENT_INDEX], recommendationSystem);
-        } catch (InvalidConfigException e) {
+            FileReader.loadFile(args[PATH_ARGUMENT_INDEX], recommendationSystem);
+        } catch (InvalidConfigurationException e) {
             recommendationSystem.getGraph().setGraph(oldGraph);
-            throw new InvalidCommandArgumentException(String.format(INVALID_CONFIG, e.getMessage()));
+            throw new InvalidCommandArgumentException(e.getMessage());
         }
+        return "";
+
     }
 }

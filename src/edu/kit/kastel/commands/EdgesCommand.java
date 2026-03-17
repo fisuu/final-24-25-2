@@ -1,8 +1,10 @@
 package edu.kit.kastel.commands;
 
-import edu.kit.kastel.Edge;
-import edu.kit.kastel.Item;
-import edu.kit.kastel.RecommendationSystem;
+import edu.kit.kastel.graph.Edge;
+import edu.kit.kastel.graph.Item;
+import edu.kit.kastel.graph.ItemType;
+import edu.kit.kastel.util.RecommendationSystem;
+import edu.kit.kastel.util.FileReader;
 
 /**
  * The type edges command.
@@ -16,6 +18,7 @@ public class EdgesCommand extends Command {
     private static final String PRODUCT_SYNTAX = "%s:%d";
     private static final String EDGE_SYNTAX = "%s-[%s]->%s";
     private static final String LINE_SEPARATOR = System.lineSeparator();
+    private static final int ARG_LENGTH = 1;
 
     private final RecommendationSystem recommendationSystem;
 
@@ -30,35 +33,35 @@ public class EdgesCommand extends Command {
     }
 
     @Override
-    public void execute(String[] args) throws InvalidCommandArgumentException {
+    public String execute(String[] args) throws InvalidCommandArgumentException {
 
-        invalidArgumentLength(args, 1);
+        validateArgumentLength(args, ARG_LENGTH);
 
-        StringBuilder sb = new StringBuilder();
+        StringBuilder output = new StringBuilder();
 
-        for (Item object : recommendationSystem.getGraph().getItemGraph().keySet()) {
-            for (Edge edge : recommendationSystem.getGraph().getItemGraph().get(object)) {
+        for (Item object : recommendationSystem.getGraph().getDirectedGraph().keySet()) {
+            for (Edge edge : recommendationSystem.getGraph().getDirectedGraph().get(object)) {
                 String source;
-                if (object.getId() != -1) {
+                if (object.getType().equals(ItemType.PRODUCT)) {
                     source = PRODUCT_SYNTAX.formatted(object.getName(), object.getId());
                 } else {
                     source = object.getName();
                 }
-                buildString(sb, edge, source);
+                buildString(output, edge, source);
             }
         }
-        sb.deleteCharAt(sb.length() - 1);
-        System.out.println(sb);
+        output.deleteCharAt(output.length() - FileReader.INDEX_OFFSET);
+        return output.toString();
     }
 
-    private void buildString(StringBuilder sb, Edge edge, String source) {
+    private static void buildString(StringBuilder stringBuilder, Edge edge, String source) {
         String target;
-        if (edge.getNeighbor().getId() != -1) {
+        if (edge.getNeighbor().getType().equals(ItemType.PRODUCT)) {
             target = PRODUCT_SYNTAX.formatted(edge.getNeighbor().getName(), edge.getNeighbor().getId());
-            sb.append(String.format(EDGE_SYNTAX + LINE_SEPARATOR, source, edge.getWeight().getName(), target));
+            stringBuilder.append(String.format(EDGE_SYNTAX + LINE_SEPARATOR, source, edge.getWeight().getName(), target));
         } else {
             target = edge.getNeighbor().getName();
-            sb.append(String.format(EDGE_SYNTAX + LINE_SEPARATOR, source, edge.getWeight().getName(), target));
+            stringBuilder.append(String.format(EDGE_SYNTAX + LINE_SEPARATOR, source, edge.getWeight().getName(), target));
         }
     }
 }

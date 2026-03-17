@@ -1,41 +1,43 @@
-package edu.kit.kastel;
+package edu.kit.kastel.graph;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import java.util.TreeMap;
 
 /**
- * The type Graph.
+ * The type graph.
+ * Represents a graph with items and relations.
+ * While items are the nodes and relations are the edges between the nodes.
  *
  * @author uwing
  */
 public class Graph {
 
     private final Map<Item, List<Edge>> graph;
-    private final Map<Item, List<Edge>> originalGraph;
-
-    private int recursionCounter = 0;
 
     /**
-     * Instantiates a new Graph.
+     * Instantiates a new graph.
      */
     public Graph() {
         this.graph = new HashMap<>();
-        this.originalGraph = new HashMap<>();
     }
 
     /**
-     * Gets graph.
+     * Gets the sorted directed graph.
+     * The nodes are sorted by their name.
+     * The edges are sorted by the name of the neighbor and the relation.
      *
      * @return the graph
      */
-    public Map<Item, List<Edge>> getItemGraph() {
+    public Map<Item, List<Edge>> getDirectedGraph() {
         Map<Item, List<Edge>> map = new TreeMap<>(Comparator.comparing(node -> node.getName()));
         map.putAll(graph);
         for (List<Edge> edges : map.values()) {
@@ -45,14 +47,15 @@ public class Graph {
     }
 
     /**
-     * Reset graph.
+     * Resets the graph.
      */
     public void resetGraph() {
         graph.clear();
     }
 
     /**
-     * Sets graph.
+     * Sets up the graph.
+     * Used to restore the graph from a previous state.
      *
      * @param graph the old graph
      */
@@ -61,21 +64,13 @@ public class Graph {
     }
 
     /**
-     * Sets original graph.
-     **/
-    public void setOriginalGraph() {
-        this.originalGraph.putAll(graph);
-    }
-
-
-    /**
-     * Add edge.
+     * Adds nodes and their relation to the graph.
      *
-     * @param source   the source
-     * @param neighbor the neighbor
-     * @param weight   the weight
+     * @param source   the source item
+     * @param neighbor the neighbor item
+     * @param weight   the relation between the two items
      */
-    public void addEdge(Item source, Item neighbor, Relation weight) {
+    public void addToGraph(Item source, Item neighbor, Relation weight) {
         graph.putIfAbsent(source, new ArrayList<>());
         graph.putIfAbsent(neighbor, new ArrayList<>());
         if (!findEdge(source, neighbor, weight)) {
@@ -85,11 +80,12 @@ public class Graph {
     }
 
     /**
-     * Remove edge.
+     * Removes an edge from the graph.
+     * If a node is disconnected, it will be removed from the graph.
      *
-     * @param source   the source
-     * @param neighbor the neighbor
-     * @param weight   the weight
+     * @param source   the source item
+     * @param neighbor the neighbor item
+     * @param weight   the relation between the two items
      */
     public void removeEdge(Item source, Item neighbor, Relation weight) {
         if (findEdge(source, neighbor, weight)) {
@@ -117,25 +113,16 @@ public class Graph {
     }
 
     /**
-     * Gets neighbors.
+     * Gets siblings of a given item.
+     * Siblings are items that share the same category they are contained in.
      *
-     * @param node the node
-     * @return the neighbors
-     */
-    public List<Edge> getNeighbors(Item node) {
-        return graph.get(node);
-    }
-
-    /**
-     * Gets siblings.
-     *
-     * @param node the node
-     * @return the siblings
+     * @param node the item to get the siblings for
+     * @return the siblings of the item
      */
     public Set<Item> getSiblings(Item node) {
         Set<Item> upperCategories = new HashSet<>();
         Set<Item> siblings = new HashSet<>();
-        for (Edge edge : getNeighbors(node)) {
+        for (Edge edge : graph.get(node)) {
             if (edge.getWeight().equals(Relation.CONTAINED_IN_RELATION)) {
                 upperCategories.add(edge.getNeighbor());
             }
@@ -150,63 +137,50 @@ public class Graph {
                 }
             }
         }
+        siblings.removeAll(Collections.singletonList(node));
         return siblings;
     }
 
     /**
-     * Gets predecessors.
+     * Gets the predecessors and all their predecessors of a given item.
      *
-     * @param node the node
-     * @return the predecessors
+     * @param startNode the starting item
+     * @return the set of predecessors
      */
-    public Set<Item> getPredecessors(Item node) {
-        Set<Item> predecessors = new HashSet<>();
-        for (Edge edge : graph.get(node)) {
-            if (edge.getWeight().equals(Relation.SUCCESSOR_OF_RELATION)) {
-                predecessors.add(edge.getNeighbor());
-                recursionCounter++;
-                if (recursionCounter > graph.size()) {
-                    recursionCounter = 0;
-                    return predecessors;
-                }
-            }
-        }
-        List<Item> earlierPredecessors = new ArrayList<>(predecessors);
-        for (Item predecessor : earlierPredecessors) {
-            predecessors.addAll(getPredecessors(predecessor));
-        }
-        return predecessors;
+    public Set<Item> getPredecessors(Item startNode) {
+        Set<Item> nodes = breadthSearchGraph(startNode, Relation.SUCCESSOR_OF_RELATION);
+        nodes.removeAll(Collections.singletonList(startNode));
+        return nodes;
     }
 
     /**
-     * Gets successors.
+     * Gets the successors and all their successors of a given item.
      *
-     * @param node the node
-     * @return the successors
+     * @param startNode the starting item
+     * @return the set of successors
      */
-    public Set<Item> getSuccessors(Item node) {
-        Set<Item> successors = new HashSet<>();
-        for (Edge edge : graph.get(node)) {
-            if (edge.getWeight().equals(Relation.PREDECESSOR_OF_RELATION)) {
-                successors.add(edge.getNeighbor());
-                recursionCounter++;
-                if (recursionCounter > graph.size()) {
-                    recursionCounter = 0;
-                    return successors;
+    public Set<Item> getSuccessors(Item startNode) {
+        Set<Item> nodes = breadthSearchGraph(startNode, Relation.PREDECESSOR_OF_RELATION);
+        nodes.removeAll(Collections.singletonList(startNode));
+        return nodes;
+    }
+
+    private Set<Item> breadthSearchGraph(Item startNode, Relation relation) {
+        Set<Item> visited = new HashSet<>();
+        Queue<Item> queue = new LinkedList<>();
+        queue.add(startNode);
+        visited.add(startNode);
+
+        while (!queue.isEmpty()) {
+            Item currentNode = queue.poll();
+            for (Edge edge : graph.get(currentNode)) {
+                Item neighbor = edge.getNeighbor();
+                if (!visited.contains(neighbor) && edge.getWeight().equals(relation)) {
+                    visited.add(neighbor);
+                    queue.add(neighbor);
                 }
             }
         }
-        List<Item> laterSuccessors = new ArrayList<>(successors);
-        for (Item successor : laterSuccessors) {
-            successors.addAll(getSuccessors(successor));
-        }
-        return successors;
-    }
-
-    /**
-     * Reset recursion counter.
-     */
-    public void resetRecursionCounter() {
-        recursionCounter = 0;
+        return visited;
     }
 }

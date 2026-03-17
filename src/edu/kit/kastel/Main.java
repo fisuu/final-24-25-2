@@ -1,19 +1,20 @@
 package edu.kit.kastel;
 
 import edu.kit.kastel.commands.CommandHandler;
+import edu.kit.kastel.util.RecommendationSystem;
 
 /**
- * The type Main.
+ * The type main.
  *
  * @author uwing
  */
-public final class  Main {
+public final class Main {
 
     private Main() {
     }
 
     /**
-     * The entry point of application.
+     * The entry point of the application.
      *
      * @param args the input arguments
      */
